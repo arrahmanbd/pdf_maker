@@ -1,0 +1,25 @@
+name: pdf_maker
+description: PDF Maker is a simple yet powerful Flutter plugin that lets you design your pages and turn them into high-quality PDF documents.
+version: 1.0.0
+homepage: https://github.com/arrahmanbd/pdf_maker
+
+screenshots:
+  - description: 'Package Logo'
+    path: images/package_icon.png
+  - description: 'Multi Language Support Example'
+    path: images/letter.png
+
+environment:
+  sdk: ^3.5.4
+  flutter: '>=3.3.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  pdf: ^3.11.1
+  plugin_platform_interface: ^2.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
