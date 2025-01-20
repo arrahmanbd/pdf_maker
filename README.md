@@ -171,4 +171,8 @@ PDF Maker is maintained by AR Rahman. You can contact me at [arrahman.bd@outlook
 
 If you find PDF Maker helpful, please ⭐️ the repository!
 
-[![Stand With Palestine](images/StandWithPalestine.svg)](https://thebsd.github.io/StandWithPalestine)[![Stand With Palestine](images/StandWithPalestine.svg)](https://thebsd.github.io/StandWithPalestine)[![Stand With Palestine](images/StandWithPalestine.svg)](https://thebsd.github.io/StandWithPalestine)
+
+[![Stand With Palestine](https://github.com/arrahmanbd/pdf_maker/raw/master/images/StandWithPalestine.svg)](https://pub.dev/packages/pdf_maker)
+ [![Stand With Palestine](https://github.com/arrahmanbd/pdf_maker/raw/master/images/StandWithPalestine.svg)](https://pub.dev/packages/pdf_maker)
+ [![Stand With Palestine](https://github.com/arrahmanbd/pdf_maker/raw/master/images/StandWithPalestine.svg)](https://pub.dev/packages/pdf_maker)
+
