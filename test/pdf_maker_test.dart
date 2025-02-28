@@ -42,11 +42,17 @@ void main() {
 
       // Act
       final Uint8List pdfBytes = await pdfMaker.createPDF(widget, setup: setup);
+      final Uint8List multiPage = await pdfMaker
+          .createMultiPagePDF([widget, widget, widget], setup: setup);
 
       // Assert
       expect(pdfBytes, isNotEmpty, reason: "PDF bytes should not be empty.");
       expect(pdfBytes.length, greaterThan(0),
           reason: "PDF size should be greater than 0.");
+      expect(multiPage, isNotEmpty,
+          reason: "Multi Page PDF bytes should not be empty.");
+      expect(multiPage.length, greaterThan(1),
+          reason: "Multi Page PDF size should be greater than 1.");
     });
   });
 }

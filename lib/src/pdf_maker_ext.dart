@@ -7,3 +7,11 @@ extension BlankPageExtensions on BlankPage {
     return BlankPage.createPDF(this, setup: setup);
   }
 }
+
+//Extension for multipage PDF
+extension MultiPageBlankPageExtensions on List<BlankPage> {
+  /// Generates a PDF file from provided pages.
+  Future<Uint8List> toPDF({PageSetup? setup}) async {
+    return PDFMaker().createMultiPagePDF(this, setup: setup);
+  }
+}

@@ -18,6 +18,8 @@ dependencies:
     sdk: flutter
   path_provider: ^2.1.5
   open_file: ^3.5.10
+
+  google_fonts: ^6.2.1
   pdf_maker:
     # When depending on this package from a real application you should use:
     #   pdf_maker: ^x.y.z
@@ -70,16 +72,16 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  fonts:
-    - family: BanglaTest
-      fonts:
-        - asset: fonts/nobin_demo.ttf
-    - family: EnglishTest
-      fonts:
-        - asset: fonts/kugle_demo.ttf
-    - family: HindiTest
-      fonts:
-        - asset: fonts/mangal_demo.ttf
+  # fonts:
+  #   - family: BanglaTest
+  #     fonts:
+  #       - asset: fonts/nobin_demo.ttf
+  #   - family: EnglishTest
+  #     fonts:
+  #       - asset: fonts/kugle_demo.ttf
+  #   - family: HindiTest
+  #     fonts:
+  #       - asset: fonts/mangal_demo.ttf
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
   #   - family: Trajan Pro

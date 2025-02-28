@@ -1,12 +1,10 @@
 import 'dart:async';
-import 'dart:typed_data';
-import 'dart:ui' as ui;
-import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
+import 'package:flutter/foundation.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:pdf_maker/src/page_template.dart';
 import 'interface.dart';
 import 'page_setup.dart';
+import 'page_template.dart';
+import 'render_ui.dart';
 
 class PDFMaker implements PdfGenerator {
   /// Generates a PDF document from the provided page.
@@ -16,155 +14,99 @@ class PDFMaker implements PdfGenerator {
   /// [setup] - An option to customize your PDF.
   @override
   Future<Uint8List> createPDF(BlankPage page, {PageSetup? setup}) async {
-    final Widget pdfWidget = page;
-    double pageScale = setup!.scale;
-    final Uint8List imageBytes = await _renderFromWidget(pdfWidget, pageScale,
-        context: setup.context, targetSize: setup.size, quality: setup.quality);
+    final Uint8List imageBytes = await RenderUI.fromWidget(
+      page,
+      setup!.scale,
+      context: setup.context,
+      targetSize: setup.size,
+      quality: setup.quality,
+    );
+
+    if (setup.renderMode == PDFRenderMode.normal) {
+      return _generateSyncPDF([imageBytes], setup);
+    } else {
+      return await compute(_generatePDF, {
+        "images": [imageBytes],
+        "setup": setup.toMap(), // Convert `PageSetup` to a serializable Map
+      });
+    }
+  }
+
+  /// Generates a multi-page PDF document.
+  @override
+  Future<Uint8List> createMultiPagePDF(
+    List<BlankPage> pages, {
+    PageSetup? setup,
+  }) async {
+    List<Uint8List> imageList = [];
+
+    //  Render all pages to imagebytes first (UI thread)
+    for (BlankPage page in pages) {
+      final Uint8List imageBytes = await RenderUI.fromWidget(
+        page,
+        setup!.scale,
+        context: setup.context,
+        targetSize: setup.size,
+        quality: setup.quality,
+      );
+      imageList.add(imageBytes);
+    }
+
+    if (setup!.renderMode == PDFRenderMode.normal) {
+      //Cannot run in an isolate because it uses BuildContext
+      return _generateSyncPDF(imageList, setup);
+    } else {
+      return await compute(_generatePDF, {
+        "images": imageList,
+        "setup": setup.toMap(), //  Convert `PageSetup` to a serializable Map
+      });
+    }
+  }
+
+  /// Generates a PDF synchronously (UI mode)
+  /// UI Rendering function cannot be run in an isolate because it uses Widgets.
+  /// A separate method must be implemented to handle this process efficiently.
+
+  Future<Uint8List> _generateSyncPDF(List<Uint8List> images, PageSetup setup) {
     final pdf = pw.Document();
+
+    for (Uint8List imageBytes in images) {
+      final pw.ImageProvider image = pw.MemoryImage(imageBytes);
+      pdf.addPage(
+        pw.Page(
+          pageFormat: setup.getPageFormat(),
+          orientation: setup.getDocumentOrientation(),
+          margin: pw.EdgeInsets.all(setup.margins),
+          build: (pw.Context context) => pw.Center(child: pw.Image(image)),
+        ),
+      );
+    }
+    return pdf.save();
+  }
+}
+
+/// Implements a background isolate function for non-UI rendering tasks.
+/// A separate function is required to handle PDF export in the background,
+/// reducing the load on the main thread and improving performance.
+
+Future<Uint8List> _generatePDF(Map<String, dynamic> params) async {
+  final List<Uint8List> images = params["images"];
+  final Map<String, dynamic> setupMap = params["setup"];
+
+  // Convert Map back to `PageSetup`
+  final PageSetup setup = PageSetup.fromMap(setupMap);
+
+  final pdf = pw.Document();
+  for (Uint8List imageBytes in images) {
     final pw.ImageProvider image = pw.MemoryImage(imageBytes);
     pdf.addPage(
       pw.Page(
         pageFormat: setup.getPageFormat(),
         orientation: setup.getDocumentOrientation(),
         margin: pw.EdgeInsets.all(setup.margins),
-        build: (pw.Context context) {
-          return pw.Center(
-            child: pw.Image(image),
-          );
-        },
+        build: (pw.Context context) => pw.Center(child: pw.Image(image)),
       ),
     );
-    return pdf.save();
   }
-
-  /// Render a widget as pdf page
-  /// [widget] - The widget to render.
-  /// [delay] - Delay before capturing (increases with widget complexity).
-  /// [quality] - The quality of the pdf content 1-10.
-  /// [context] - Used to inherit app theme and media query data.
-  /// [targetSize] - Target size for the output image.
-  Future<Uint8List> _renderFromWidget(
-    Widget widget,
-    double scale, {
-    Duration delay = const Duration(seconds: 1),
-    double? quality,
-    BuildContext? context,
-    Size? targetSize,
-  }) async {
-    // If targetSize is provided, apply the scaling factor
-    Size finalTargetSize =
-        targetSize ?? const Size(592, 812); // Default size A4 if no targetSize
-    finalTargetSize =
-        Size(finalTargetSize.width * scale, finalTargetSize.height * scale);
-    // Default pixelRatio is 3.0 for higher resolution
-    quality ??= 3.0; // Set a higher pixel ratio for better quality
-    ui.Image image = await _widgetToUiImage(
-      widget,
-      delay: delay,
-      quality: quality,
-      context: context,
-      targetSize: finalTargetSize,
-    );
-    final ByteData? byteData =
-        await image.toByteData(format: ui.ImageByteFormat.png);
-    image.dispose();
-    return byteData!.buffer.asUint8List();
-  }
-
-  /// Converts a widget into a `ui.Image`.
-  ///
-  /// This method handles rendering the widget in an isolated render tree
-  /// and returning its image representation.
-  static Future<ui.Image> _widgetToUiImage(
-    Widget widget, {
-    Duration delay = const Duration(seconds: 1),
-    double? quality,
-    BuildContext? context,
-    Size? targetSize,
-  }) async {
-    int retryCounter = 3;
-    bool isDirty = false;
-
-    Widget child = widget;
-
-    if (context != null) {
-      child = InheritedTheme.captureAll(
-        context,
-        MediaQuery(
-          data: MediaQuery.of(context),
-          child: Material(child: child),
-        ),
-      );
-    }
-
-    final RenderRepaintBoundary repaintBoundary = RenderRepaintBoundary();
-    final platformDispatcher = WidgetsBinding.instance.platformDispatcher;
-    final fallbackView = platformDispatcher.views.first;
-    final view =
-        context == null ? fallbackView : View.maybeOf(context) ?? fallbackView;
-    Size logicalSize = targetSize ?? view.physicalSize / view.devicePixelRatio;
-    Size imageSize = targetSize ?? view.physicalSize;
-
-    assert(logicalSize.aspectRatio.toStringAsPrecision(5) ==
-        imageSize.aspectRatio.toStringAsPrecision(5));
-
-    final RenderView renderView = RenderView(
-      view: view,
-      child: RenderPositionedBox(
-          alignment: Alignment.center, child: repaintBoundary),
-      configuration: ViewConfiguration(
-        logicalConstraints: BoxConstraints(
-          maxWidth: logicalSize.width,
-          maxHeight: logicalSize.height,
-        ),
-        devicePixelRatio: quality ?? 3.0,
-      ),
-    );
-
-    final PipelineOwner pipelineOwner = PipelineOwner();
-    final BuildOwner buildOwner = BuildOwner(
-        focusManager: FocusManager(), onBuildScheduled: () => isDirty = true);
-
-    pipelineOwner.rootNode = renderView;
-    renderView.prepareInitialFrame();
-
-    final RenderObjectToWidgetElement<RenderBox> rootElement =
-        RenderObjectToWidgetAdapter<RenderBox>(
-      container: repaintBoundary,
-      child: Directionality(
-        textDirection: TextDirection.ltr,
-        child: child,
-      ),
-    ).attachToRenderTree(buildOwner);
-
-    buildOwner.buildScope(rootElement);
-    buildOwner.finalizeTree();
-
-    pipelineOwner.flushLayout();
-    pipelineOwner.flushCompositingBits();
-    pipelineOwner.flushPaint();
-
-    ui.Image? image;
-
-    do {
-      isDirty = false;
-
-      image = await repaintBoundary.toImage(
-          pixelRatio: quality ?? (imageSize.width / logicalSize.width));
-
-      await Future.delayed(delay);
-
-      if (isDirty) {
-        buildOwner.buildScope(rootElement);
-        buildOwner.finalizeTree();
-        pipelineOwner.flushLayout();
-        pipelineOwner.flushCompositingBits();
-        pipelineOwner.flushPaint();
-      }
-
-      retryCounter--;
-    } while (isDirty && retryCounter >= 0);
-
-    return image;
-  }
+  return pdf.save();
 }
