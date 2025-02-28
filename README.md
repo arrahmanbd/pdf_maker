@@ -1,10 +1,9 @@
 # PDF Maker  🇵🇸
 
-![PDF Maker Cover](images/package_cover.png)
+![PDF Maker Cover](https://github.com/arrahmanbd/pdf_maker/raw/master/images/package_cover.png)
 
 **pdf_maker** is a simple yet powerful Flutter plugin that lets you design your pages and turn them into high-quality PDF documents without breaking fonts or compromising quality. Create professional-grade PDFs with any design, in any language, all at once. Enjoy easy real-time previews and total control over your layout.
 
-<!-- [![Stand With Palestine](images/banner-no-action.svg)](https://pub.dev/packages/pdf_maker) -->
 
 
 ## ✨ Features
@@ -177,8 +176,8 @@ When using the `createPDF` method, it's important to manage the `BuildContext` p
 
 ## **Demo Preview 📥**
 
-- [Click here to view the generated invoice PDF](example/demo/invoice.pdf)
-- [Click here to view a PDF with multiple pages in different languages](example/demo/pdf_maker_full.pdf)
+- [Click here to view the generated invoice PDF](https://github.com/arrahmanbd/pdf_maker/blob/master/example/demo/invoice.pdf)
+- [Click here to view a PDF with multiple pages in different languages](https://github.com/arrahmanbd/pdf_maker/blob/master/example/demo/pdf_maker_full.pdf)
 
 ---
 
