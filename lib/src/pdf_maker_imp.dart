@@ -85,7 +85,7 @@ class PDFMaker implements PdfGenerator {
   }
 }
 
-/// Implements a background isolate function for non-UI rendering tasks.
+/// Implemented a background isolate function for non-UI rendering tasks.
 /// A separate function is required to handle PDF export in the background,
 /// reducing the load on the main thread and improving performance.
 

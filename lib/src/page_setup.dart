@@ -48,7 +48,7 @@ class PageSetup {
   ///
   final double? quality;
 
-  /// [PDFRenderMode] - The mode in which the PDF is rendered.
+  /// [PDFRenderMode] - The mode in which the PDF is rendered. Default Isolated.
   ///
   final PDFRenderMode renderMode;
   PageSetup(
@@ -58,7 +58,7 @@ class PageSetup {
       this.context,
       this.scale = 1.0,
       this.quality = 3.0,
-      this.renderMode = PDFRenderMode.normal})
+      this.renderMode = PDFRenderMode.isolated})
       : size = _getPageSize(pageFormat);
 
   /// Returns the corresponding [PdfPageFormat] for the given [PageFormat].
