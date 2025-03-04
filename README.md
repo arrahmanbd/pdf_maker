@@ -51,7 +51,7 @@ class TestPage extends BlankPage {
 Now you can generate a PDF from your custom-designed page in just a few simple steps.  
 
 
-Use `createPDF` to create a multi-page PDF and save the file:   
+Use `createPDF` to create a pdf from your single custom-designed page and save the file:   
 
 ```dart
 ElevatedButton(
@@ -101,7 +101,7 @@ Both approaches allow you to easily create and save PDF files based on your cust
 
 ### **1. Define Your Pages**  
 
-Create a list of your custom page widgets:  
+Create a list of your custom-designed pages:  
 
 ```dart
 const pages = [Page1(), Page2(), Page3()];
