@@ -59,30 +59,47 @@ class PageSetup {
       this.scale = 1.0,
       this.quality = 3.0,
       this.renderMode = PDFRenderMode.isolated})
-      : size = _getPageSize(pageFormat);
+      : size = _getPageSize(pageFormat, orientation);
 
   /// Returns the corresponding [PdfPageFormat] for the given [PageFormat].
+  /// Applies landscape orientation if specified.
   PdfPageFormat getPageFormat() {
+    PdfPageFormat baseFormat;
     switch (pageFormat) {
       case PageFormat.a3:
-        return PdfPageFormat.a3;
+        baseFormat = PdfPageFormat.a3;
+        break;
       case PageFormat.a4:
-        return PdfPageFormat.a4;
+        baseFormat = PdfPageFormat.a4;
+        break;
       case PageFormat.a5:
-        return PdfPageFormat.a5;
+        baseFormat = PdfPageFormat.a5;
+        break;
       case PageFormat.a6:
-        return PdfPageFormat.a6;
+        baseFormat = PdfPageFormat.a6;
+        break;
       case PageFormat.letter:
-        return PdfPageFormat.letter;
+        baseFormat = PdfPageFormat.letter;
+        break;
       case PageFormat.legal:
-        return PdfPageFormat.legal;
+        baseFormat = PdfPageFormat.legal;
+        break;
       case PageFormat.roll57:
-        return PdfPageFormat.roll57;
+        baseFormat = PdfPageFormat.roll57;
+        break;
       case PageFormat.roll80:
-        return PdfPageFormat.roll80;
+        baseFormat = PdfPageFormat.roll80;
+        break;
       case PageFormat.custom:
-        return PdfPageFormat.a4; // Placeholder for custom format
+        baseFormat = PdfPageFormat.a4; // Placeholder for custom format
+        break;
     }
+    
+    // Apply orientation: use .landscape for landscape, default is portrait
+    if (orientation == DocumentOrientation.landscape) {
+      return baseFormat.landscape;
+    }
+    return baseFormat;
   }
 
   /// Converts [DocumentOrientation] to [pdf.PageOrientation].
@@ -95,32 +112,62 @@ class PageSetup {
     }
   }
 
-// Function to automatically get the size based on the format
-  static Size _getPageSize(PageFormat format) {
+// Function to automatically get the size based on the format and orientation
+  // Uses actual PDF points dimensions to ensure accurate rendering
+  static Size _getPageSize(PageFormat format, DocumentOrientation orientation) {
+    Size baseSize;
     switch (format) {
       case PageFormat.a3:
-        return const Size(592, 844); // A3 in pixels
+        // A3: 841.89 x 1190.55 points (297 x 420 mm)
+        baseSize = const Size(841.8897637795275, 1190.551181102362);
+        break;
       case PageFormat.a4:
-        return const Size(592, 812); // A4 in pixels
+        // A4: 595.28 x 841.89 points (210 x 297 mm)
+        baseSize = const Size(595.275590551181, 841.8897637795275);
+        break;
       case PageFormat.a5:
-        return const Size(419, 592); // A5 in pixels
+        // A5: 419.53 x 595.28 points (148 x 210 mm)
+        baseSize = const Size(419.5275590551181, 595.275590551181);
+        break;
       case PageFormat.a6:
-        return const Size(296, 419); // A6 in pixels
+        // A6: 297.64 x 419.53 points (105 x 148 mm)
+        baseSize = const Size(297.6377952755906, 419.52755905511816);
+        break;
       case PageFormat.letter:
-        return const Size(612, 792); // Letter size in pixels
+        // Letter: 612 x 792 points (8.5 x 11 inches)
+        baseSize = const Size(612, 792);
+        break;
       case PageFormat.legal:
-        return const Size(612, 1008); // Legal size in pixels
+        // Legal: 612 x 1008 points (8.5 x 14 inches)
+        baseSize = const Size(612, 1008);
+        break;
       case PageFormat.roll57:
-        return const Size(
+        baseSize = const Size(
             57, 0); // Roll57 has a fixed width, height is user-defined
+        break;
       case PageFormat.roll80:
-        return const Size(
+        baseSize = const Size(
             80, 0); // Roll80 has a fixed width, height is user-defined
+        break;
       case PageFormat.custom:
-        return const Size(0, 0); // Custom size, to be defined by the user
+        baseSize = const Size(0, 0); // Custom size, to be defined by the user
+        break;
       default:
-        return const Size(0, 0); // Default case, in case of invalid format
+        baseSize = const Size(0, 0); // Default case, in case of invalid format
     }
+    
+    // Swap width and height for landscape orientation
+    // Note: Roll formats and custom formats are not swapped
+    if (orientation == DocumentOrientation.landscape &&
+        format != PageFormat.roll57 &&
+        format != PageFormat.roll80 &&
+        format != PageFormat.custom &&
+        baseSize.width > 0 &&
+        baseSize.height > 0) {
+      return Size(baseSize.height, baseSize.width);
+    }
+    
+    return baseSize;
   }
 
   /// ⚠️ ** Buildcontext Can't be sent to an isolate, so I ignored it**
